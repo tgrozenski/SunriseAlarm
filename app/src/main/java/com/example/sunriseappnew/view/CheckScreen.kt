@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+val days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
 
 @Composable
 fun CheckboxScreen(
@@ -22,7 +22,7 @@ fun CheckboxScreen(
 ) {
     Column {
         DayOfWeekCheckboxRow(
-            modifier = Modifier.padding(top = 50.dp),
+//            modifier = Modifier.padding(top = 50.dp),
             selectedDays = selectedDays,
             onCheck = onCheck,
         )
@@ -69,7 +69,6 @@ fun DayCheckbox(
         Text(
             text = day,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }

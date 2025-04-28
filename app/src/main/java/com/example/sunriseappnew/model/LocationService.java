@@ -1,5 +1,4 @@
 package com.example.sunriseappnew.model;
-
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -11,13 +10,10 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 
 public class LocationService {
     private final Context context;
     private final FusedLocationProviderClient fusedLocationClient;
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     public LocationService() {
         this.context = SunriseApp.Companion.getAppContext(); // Use application context to avoid leaks
@@ -80,8 +76,11 @@ public class LocationService {
                 new com.luckycatlabs.sunrisesunset.dto.Location(loc.getLatitude(), loc.getLongitude());
 
         SunriseSunsetCalculator calculator =
-                new SunriseSunsetCalculator(location, TimeZone.getDefault());
+                new SunriseSunsetCalculator(location, date.getTimeZone());
 
-        return calculator.getOfficialSunriseCalendarForDate(date);
+        Calendar sunrise = calculator.getOfficialSunriseCalendarForDate(date);
+        sunrise.add(Calendar.MINUTE, -2); // set a bit earlier to account for inaccuracies.
+
+        return sunrise;
     }
 }

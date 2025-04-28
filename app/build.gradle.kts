@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+//    implementation("org.shredzone.commons:commons-suncalc:3.11")
     implementation(libs.sunrisesunsetcalculator)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
@@ -60,4 +61,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(kotlin("test"))
 }

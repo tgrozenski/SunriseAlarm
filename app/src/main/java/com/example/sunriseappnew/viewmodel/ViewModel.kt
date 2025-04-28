@@ -1,14 +1,18 @@
 package com.example.sunriseappnew.viewmodel
 import android.location.Location
+import android.os.Build
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
 import com.example.sunriseappnew.model.LocationService
 import com.example.sunriseappnew.model.LocationService.LocationResultCallback
 import com.example.sunriseappnew.model.SunriseApp
+import com.example.sunriseappnew.model.getCalendarDate
 import com.example.sunriseappnew.model.setAlarm
-import androidx.compose.runtime.State
+
 
 class SunriseViewModel : ViewModel() {
 
@@ -24,6 +28,7 @@ class SunriseViewModel : ViewModel() {
         override fun onLocationSuccess(loc: Location?) {
             _location.value = loc
             Log.d("location", "success: ${_location.value}")
+            Log.d("location", "success: ${location.value}")
         }
         override fun onLocationUnavailable(reason: String?) {
             Log.d("location", "failure: $reason")
@@ -39,19 +44,24 @@ class SunriseViewModel : ViewModel() {
     fun getLocation() {
         if (_location.value == null)
             locationService.getLastKnownLocation(locationImplementation)
-
-        Log.d("location", "${_location.value}")
-        Log.d("location", "${location.value}")
-
+        else
+            Log.d("location", "already have location: ${_location.value}")
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun toggleDay(day: String) {
         if (day in selectedDays) {
             _selectedDays.remove(day)
         } else {
             _selectedDays.add(day)
-            setAlarm(SunriseApp.getAppContext(), 8, 20, skipUi = true)
+
+            if (_location.value != null) {
+                val sunrise = LocationService.getNextSunrise(_location.value, getCalendarDate(day))
+                Log.d("sunrise", "sunrise time: ${sunrise.time}")
+                setAlarm(SunriseApp.getAppContext(), sunrise, message = "Sunrise Alarm", skipUi = true)
+            } else {
+                Log.d("location", "no location to use")
+            }
         }
-        Log.d("checks", "$selectedDays")
     }
 }
