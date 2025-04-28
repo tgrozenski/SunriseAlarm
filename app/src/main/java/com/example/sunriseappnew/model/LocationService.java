@@ -1,11 +1,10 @@
 package com.example.sunriseappnew.model;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
-import android.util.Log;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
@@ -21,20 +20,12 @@ public class LocationService {
     }
 
     /**
-     * Fetches the last known location (single shot)
+     * Fetches the last location (single shot).
      */
-    public void getLastKnownLocation(LocationResultCallback callback) {
-        if (!hasLocationPermission()) {
+    @SuppressLint("MissingPermission")
+    public void getLastLocation(LocationResultCallback callback) {
+        if (!hasLocationPermission()) { // checking for permission here
             callback.onPermissionRequired();
-            return;
-        }
-
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(context,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d("Location", "don't have permission");
             return;
         }
 
@@ -52,8 +43,11 @@ public class LocationService {
     }
 
 
-    public static boolean hasLocationPermission() {
-        Context context = SunriseApp.Companion.getAppContext();
+    /**
+     * Checks for location permission.
+     * @return true if granted, else false
+     */
+    public boolean hasLocationPermission() {
         return ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -63,6 +57,9 @@ public class LocationService {
         ) == PackageManager.PERMISSION_GRANTED;
     }
 
+    /**
+     * Interface for all methods to implement in order to call [getLastLocation].
+     */
     public interface LocationResultCallback {
         void onLocationSuccess(Location location);
         void onLocationUnavailable(String reason);
@@ -70,6 +67,10 @@ public class LocationService {
         void onPermissionRequired();
     }
 
+    /**
+     * Uses luckycatlabs sunrise/sunset calculator to calculate sunrise, gives time two minutes before as margin for error.
+     * @return Calendar object for two minutes before requested sunrise.
+     */
     public static Calendar getNextSunrise(Location loc, Calendar date) {
 
         com.luckycatlabs.sunrisesunset.dto.Location location =

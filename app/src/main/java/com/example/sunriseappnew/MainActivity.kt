@@ -43,8 +43,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 
 class MainActivity : ComponentActivity() {
+    /**
+     * View model instance to be used for location and checkbox.
+     */
     private val viewModel: SunriseViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -58,6 +63,13 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Text(
+                        text = "Sunrise Alarm",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text("Check a day to create a sunrise Alarm.")
                     CheckboxScreen({ day -> viewModel.toggleDay(day) }, viewModel.selectedDays)
                     CustomButton(
                         onClick = { manageAlarms() },
@@ -70,12 +82,15 @@ class MainActivity : ComponentActivity() {
                     label = "Manage Location Permissions"
                 )
             }
-            if (!LocationService.hasLocationPermission())
+            if (!LocationService().hasLocationPermission())
                 requestLocationPermissions()
             LocationUpdater()
         }
     }
 
+    /**
+     * Displays state of location in [SunriseViewModel]
+     */
     @Composable
     fun LocationStatusBox(
         location: State<Location?>,
@@ -101,6 +116,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Periodically check for location
+     */
     @Composable
     fun LocationUpdater(
         intervalMs: Long = 3000L,
@@ -122,6 +140,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Launch permission settings for user to adjust manually.
+     */
     fun openLocationPermissionSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
             data = Uri.fromParts("package", "com.example.sunriseappnew", null)
@@ -133,6 +154,9 @@ class MainActivity : ComponentActivity() {
         this.startActivity(intent)
     }
 
+    /**
+     * Launch permission request upon startup of the app.
+     */
     private fun requestLocationPermissions() {
         Log.d("location", "requesting")
         ActivityCompat.requestPermissions(

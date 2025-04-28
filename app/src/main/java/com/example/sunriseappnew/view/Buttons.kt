@@ -10,6 +10,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+/**
+ * Button components for the app.
+ */
 @Composable
 fun BottomCenteredButton(
     onClick: () -> Unit,
@@ -22,7 +25,7 @@ fun BottomCenteredButton(
         CustomButton(
             text = label,
             onClick = onClick,
-            modifier = Modifier.padding(bottom = 32.dp),
+            modifier = Modifier.padding(bottom = 50.dp),
         )
     }
 }
