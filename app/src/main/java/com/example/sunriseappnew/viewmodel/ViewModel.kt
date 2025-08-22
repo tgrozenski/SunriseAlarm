@@ -13,6 +13,7 @@ import com.example.sunriseappnew.model.LocationService.LocationResultCallback
 import com.example.sunriseappnew.model.SunriseApp
 import com.example.sunriseappnew.model.getCalendarDate
 import com.example.sunriseappnew.model.setAlarm
+import java.util.Calendar
 
 
 /**
@@ -30,6 +31,14 @@ class SunriseViewModel : ViewModel() {
     private val _location = mutableStateOf<Location?>(null)
     /** Immutable public instance of location. .*/
     val location: State<Location?> get() = _location
+
+    /** Mutable private instance of timeOffset */
+    private val _timeOffset = mutableStateOf(0f)
+    val timeOffset: State<Float> get() = _timeOffset
+
+    fun setTimeOffset(offset: Float) {
+        _timeOffset.value = offset
+    }
 
     /**
      * Uses [LocationService] to get the last known location if location is null and permission
@@ -79,7 +88,9 @@ class SunriseViewModel : ViewModel() {
             _selectedDays.add(day)
 
             if (_location.value != null) {
-                val sunrise = LocationService.getNextSunrise(_location.value, getCalendarDate(day))
+                val sunrise: Calendar = LocationService.getNextSunrise(_location.value, getCalendarDate(day))
+                // Adjust to offset here
+                sunrise.add(Calendar.MINUTE, timeOffset.value.toInt())
                 setAlarm(SunriseApp.getAppContext(), sunrise, skipUi = true)
             }
         }

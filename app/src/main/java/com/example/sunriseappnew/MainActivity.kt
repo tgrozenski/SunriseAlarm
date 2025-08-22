@@ -70,7 +70,12 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text("Check a day to create a sunrise Alarm.")
-                    CheckboxScreen({ day -> viewModel.toggleDay(day) }, viewModel.selectedDays)
+                    CheckboxScreen(
+                        onCheck = { day -> viewModel.toggleDay(day) },
+                        selectedDays = viewModel.selectedDays,
+                        timeOffset = viewModel.timeOffset.value,
+                        onTimeOffsetChange = { offset -> viewModel.setTimeOffset(offset) }
+                    )
                     CustomButton(
                         onClick = { manageAlarms() },
                         text = "Manage Alarms"

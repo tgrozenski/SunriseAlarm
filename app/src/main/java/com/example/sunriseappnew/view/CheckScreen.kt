@@ -22,12 +22,15 @@ val days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
 fun CheckboxScreen(
     onCheck: (String) -> Unit,
     selectedDays: List<String>,
+    timeOffset: Float,
+    onTimeOffsetChange: (Float) -> Unit
 ) {
     Column {
         DayOfWeekCheckboxRow(
             selectedDays = selectedDays,
             onCheck = onCheck,
         )
+        TimePicker(timeOffset = timeOffset, onValueChange = onTimeOffsetChange)
     }
 }
 
