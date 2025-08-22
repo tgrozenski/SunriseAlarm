@@ -17,7 +17,7 @@ fun TimePicker(timeOffset: Float, onValueChange: (Float) -> Unit) {
         Slider(
             value = timeOffset,
             onValueChange = { onValueChange(it) },
-            valueRange = -30f..30f,
+            valueRange = -40f..40f,
             steps = 60
         )
         Text(text = timeOffset.toInt().toString())

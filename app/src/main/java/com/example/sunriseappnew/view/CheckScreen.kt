@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 
 /**
  * UI associated with the checkbox area.
@@ -30,7 +32,11 @@ fun CheckboxScreen(
             selectedDays = selectedDays,
             onCheck = onCheck,
         )
-        TimePicker(timeOffset = timeOffset, onValueChange = onTimeOffsetChange)
+        SignedNumberInput(
+            value = timeOffset.toInt(),
+            onValueChange = { onTimeOffsetChange(it.toFloat()) },
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
     }
 }
 
