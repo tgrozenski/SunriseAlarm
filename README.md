@@ -12,7 +12,9 @@ SunriseAppNew is an Android application that allows users to set alarms for sunr
 
 ## Screenshots
 
-![In App Screenshot](Screenshots/Screenshot_20250827_074136.png "Optional Title")
+<img src="Screenshots/Screenshot_20250827_074136.png" alt="In App Screenshot" style="width: 25%; height: 25%">
+<img src="Screenshots/Screenshot_20250827_074158.png" alt="In App Screenshot" style="width: 25%; height: 25%">
+<img src="Screenshots/Screenshot_20250827_074303.png" alt="In App Screenshot" style="width: 25%; height: 25%">
 
 ## Getting Started
 
@@ -57,17 +59,17 @@ These permissions are requested at runtime.
    Choose the days of the week you want a sunrise alarm.
 
 2. **Adjust Offset:**  
-   Use the offset input to set how many minutes before or after sunrise the alarm should trigger.
+   Use the offset input to set how many minutes before or after sunrise the alarm should trigger. Toggle up for minutes before sunrise and down for minutes after sunrise. e.g. ^ 20 would mean an alarm set for 20 minutes before the sunrise at my location.
 
 3. **Sync Location:**  
-   The app will automatically fetch your location. If permissions are missing, use the "Manage Location Permissions" button.
+   The app will automatically fetch your location if it has permission. If permissions are missing, use the "Manage Location Permissions" button. A toast will be displayed periodically if no location is found. The app uses a cached location if available.
 
 4. **Manage Alarms:**  
    Use the "Manage Alarms" button to view or edit all alarms on your device.
 
 ## Project Structure
 
-The project uses the MVVM architectural pattern for clear separation of concern for components.
+The project uses the MVVM architectural pattern for clear separation of concern between the UI and the business logic.
 
 - [`app/src/main/java/com/example/sunriseappnew/`](app/src/main/java/com/example/sunriseappnew/): Main application source code.
   - [`MainActivity.kt`](app/src/main/java/com/example/sunriseappnew/MainActivity.kt): Main entry point and UI composition.
