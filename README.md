@@ -12,7 +12,7 @@ SunriseAppNew is an Android application that allows users to set alarms for sunr
 
 ## Screenshots
 
-<!-- Add screenshots here if available -->
+![In App Screenshot](Screenshots/Screenshot_20250827_074136.png "Optional Title")
 
 ## Getting Started
 
@@ -26,8 +26,7 @@ SunriseAppNew is an Android application that allows users to set alarms for sunr
 
 1. **Clone the repository:**
    ```sh
-   git clone <your-repo-url>
-   cd SunriseApp
+   git clone https://github.com/tgrozenski/SunriseAlarm
    ```
 
 2. **Open in Android Studio:**  
