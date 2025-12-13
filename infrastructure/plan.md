@@ -16,38 +16,38 @@ Multi-cloud infrastructure using Terraform to provision a weekly notification sy
 
 ### 1.2 Lambda Function
 - [ ✓ ] Create IAM role for Lambda execution
-- [ ] Attach policies for CloudWatch Logs, Secrets Manager read access, SNS publish
-- [ ] Create Lambda function resource (placeholder code initially)
+- [ ✓ ] Attach policies for CloudWatch Logs, Secrets Manager read access, SNS publish
+- [ ✓ ] Create Lambda function resource (placeholder code initially)
 - [ ] Configure environment variables (GCP project ID, FCM topic name)
 - [ ] Set appropriate timeout and memory allocation
 
 ### 1.3 EventBridge Scheduler
-- [ ] Create EventBridge rule with cron expression for Saturday (e.g., )
-- [ ] Create EventBridge target pointing to Lambda
-- [ ] Add permissions for EventBridge to invoke Lambda
+- [ ✓ ] Create EventBridge rule with cron expression for Saturday (e.g., )
+- [ ✓ ] Create EventBridge target pointing to Lambda
+- [ ✓ ] Add permissions for EventBridge to invoke Lambda
 
 ### 1.4 SNS Notifications
-- [ ] Create SNS topic for job status notifications
-- [ ] Create SNS subscription (email or SMS to your address)
-- [ ] Update Lambda IAM role to allow SNS publish
-- [ ] Note: Lambda code will publish success/failure messages to this topic
+- [ ✓ ] Create SNS topic for job status notifications
+- [ ✓ ] Create SNS subscription (email or SMS to your address)
+- [ ✓ ] Update Lambda IAM role to allow SNS publish
+Note: Lambda code will publish success/failure messages to this topic
 
 ### 1.5 Secrets Manager
-- [ ] Create Secrets Manager secret resource (empty placeholder)
+- [ ✓ ] Create Secrets Manager secret resource (empty placeholder)
 - [ ] This will be populated by GCP service account key in Phase 3
 - [ ] Configure secret rotation policy (optional, for later)
 
 ### 1.6 Outputs
-- [ ] Output Lambda ARN
-- [ ] Output SNS topic ARN
-- [ ] Output Secrets Manager secret ARN (needed for Phase 3)
+- [ ✓ ] Output Lambda ARN
+- [ ✓ ] Output SNS topic ARN
+- [ ✓ ] Output Secrets Manager secret ARN (needed for Phase 3)
 
 ---
 
 ## Phase 2: GCP/Firebase Infrastructure
 
 ### 2.1 GCP Setup
-- [ ] Configure Google provider and Google Beta provider
+- [ ✓ ] Configure Google provider and Google Beta provider
 - [ ] Enable required APIs (Firebase, Cloud Resource Manager, IAM)
 - [ ] Create or reference existing GCP project
 
@@ -55,7 +55,7 @@ Multi-cloud infrastructure using Terraform to provision a weekly notification sy
 - [ ] Enable Firebase on GCP project ( resource)
 - [ ] Create Firebase Android app ( resource)
 - [ ] Use your app's package name: 
-- [ ] Extract  for your Android project
+- [ ] Extract for your Android project
 
 ### 2.3 Service Account for FCM Access
 - [ ] Create dedicated service account for Lambda to use
@@ -73,7 +73,7 @@ Multi-cloud infrastructure using Terraform to provision a weekly notification sy
 ## Phase 3: Cross-Cloud Integration
 
 ### 3.1 Automatic Key Injection
-- [ ] Use  to store GCP service account key
+- [ ] Use secrets manager to store GCP service account key
 - [ ] Reference the key output from GCP module as the secret value
 - [ ] Ensure dependency ordering (GCP resources created before AWS secret version)
 
