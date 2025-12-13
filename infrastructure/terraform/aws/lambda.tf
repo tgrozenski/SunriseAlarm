@@ -57,3 +57,8 @@ resource "aws_lambda_function" "firebase_caller" {
 
   runtime = "python3.14"
 }
+
+output "lambda_arn" {
+  description = "The Lambda's ARN"
+  value = aws_lambda_function.firebase_caller.arn
+}

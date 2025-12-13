@@ -8,3 +8,8 @@ resource "aws_sns_topic_subscription" "get_observability_email" {
   protocol  = "email"
   endpoint  = "tyler.grozenski@gmail.com"
 }
+
+output "sns_topic_arn" {
+  description = "The SNS topic's arn"
+  value = aws_sns_topic.observability.arn
+}
