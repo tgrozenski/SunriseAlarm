@@ -16,34 +16,34 @@ terraform {
 #       name = "sunrise-app" 
 #     } 
 #   }
-}
 
+}
 # Configure the GCP Providers
 provider "google-beta" {
-    project = "sunrise-app-1374823832"
+    project = var.project_id
     region  = "us-west2"
     zone    = "us-west2-a"
 }
+
 provider "google" {
-    project = "sunrise-app-1374823832"
+    project = var.project_id
     region  = "us-west2"
     zone    = "us-west2-a"
 }
 
-resource "google_compute_instance" "vm_instance" {
-  name         = "terraform-instance"
-  machine_type = "e2-micro"
+# Enable required APIs
+locals {
+  apis = [
+    "iam.googleapis.com",
+    "firebase.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
+  ]
+}
 
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
+resource "google_project_service" "enabled" {
+  for_each = toset(local.apis)
 
-  network_interface {
-    # A default network is created for all GCP projects
-    network = "default"
-    access_config {
-    }
-  }
+  project            = var.project_id
+  service            = each.value
+  disable_on_destroy = false
 }

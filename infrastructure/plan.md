@@ -48,14 +48,14 @@ Note: Lambda code will publish success/failure messages to this topic
 
 ### 2.1 GCP Setup
 - [ ✓ ] Configure Google provider and Google Beta provider
-- [ ] Enable required APIs (Firebase, Cloud Resource Manager, IAM)
-- [ ] Create or reference existing GCP project
+- [ ✓ ] Enable required APIs (Firebase, Cloud Resource Manager, IAM)
+- [ ✓ ] Create or reference existing GCP project
 
 ### 2.2 Firebase Project
-- [ ] Enable Firebase on GCP project ( resource)
-- [ ] Create Firebase Android app ( resource)
-- [ ] Use your app's package name: 
-- [ ] Extract for your Android project
+- [ ✓ ] Enable Firebase on GCP project ( resource)
+- [ ✓ ] Create Firebase Android app ( resource)
+- [ ✓ ] Use your app's package name: 
+- [ ] Extract for your Android project (Coming back to this, want to complete all other infrastructre code first)
 
 ### 2.3 Service Account for FCM Access
 - [ ] Create dedicated service account for Lambda to use
