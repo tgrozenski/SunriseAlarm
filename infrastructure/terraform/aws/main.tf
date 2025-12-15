@@ -5,13 +5,13 @@ terraform {
       version = "~> 6.0"
     }
   }
-  # cloud { # Uncomment after dev
-  #   organization = "example-org-5e1658" 
+  cloud {
+    organization = "example-org-5e1658" 
 
-  #   workspaces { 
-  #     name = "sunrise-app" 
-  #   } 
-  # }
+    workspaces { 
+      name = "sunrise-app" 
+    } 
+  }
 }
 
 # Configure the AWS Provider

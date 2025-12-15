@@ -1,7 +1,10 @@
 # Terraform
+*.json
+!google-services.json # Needed for Firebase
 .terraform/
 *.tfstate
 *.tfstate.backup
+*.tfvars
 
 # Android
 *.iml

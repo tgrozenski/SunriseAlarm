@@ -55,26 +55,26 @@ Note: Lambda code will publish success/failure messages to this topic
 - [ ✓ ] Enable Firebase on GCP project ( resource)
 - [ ✓ ] Create Firebase Android app ( resource)
 - [ ✓ ] Use your app's package name: 
-- [ ] Extract for your Android project (Coming back to this, want to complete all other infrastructre code first)
+- [ ] Extract for your Android project (Coming back to this)
 
 ### 2.3 Service Account for FCM Access
-- [ ] Create dedicated service account for Lambda to use
-- [ ] Assign  or minimal FCM permissions
-- [ ] Generate service account key ( resource)
+- [ ✓ ] Create dedicated service account for Lambda to use
+- [ ✓ ] Assign  or minimal FCM permissions
+- [ ✓ ] Generate service account key ( resource)
 
 ### 2.4 Outputs
-- [ ] Output Firebase project ID
-- [ ] Output service account email
-- [ ] Output service account key (sensitive, for Phase 3)
-- [ ] Output download instructions for 
+- [ ✓ ] Output Firebase project ID
+- [ ✓ ] Output service account email
+- [ ✓ ] Output service account key (sensitive, for Phase 3)
+- [ ✓ ] Automate copying of google-services.json into application directory
 
 ---
 
 ## Phase 3: Cross-Cloud Integration
 
 ### 3.1 Automatic Key Injection
-- [ ] Use secrets manager to store GCP service account key
-- [ ] Reference the key output from GCP module as the secret value
+- [ ✓ ] Use secrets manager to store GCP service account key
+- [ ✓ ] Reference the key output from GCP module as the secret value (This will be in the lambda code)
 - [ ] Ensure dependency ordering (GCP resources created before AWS secret version)
 
 ### 3.2 Verification
@@ -83,6 +83,8 @@ Note: Lambda code will publish success/failure messages to this topic
 - [ ] Lambda can retrieve secret at runtime
 
 ---
+
+Program flow: EventBridge -> Lambda -> (retrieve secret manager) -> SNS + FCM -> Android app
 
 ## Phase 4: Lambda Function Code
 
@@ -115,12 +117,6 @@ Note: Lambda code will publish success/failure messages to this topic
 - [ ] Handle notification tap → open alarm reset flow
 - [ ] Read stored preferences from local storage
 - [ ] Implement one-click recalculation UI
-
----
-
-## Project Structure
-
-
 
 ---
 

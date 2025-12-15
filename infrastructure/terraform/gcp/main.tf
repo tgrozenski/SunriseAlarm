@@ -9,15 +9,15 @@ terraform {
       version = "7.13.0"
     }
   }
-#   cloud { # uncomment this after dev
-#     organization = "example-org-5e1658" 
+  cloud {
+    organization = "example-org-5e1658" 
 
-#     workspaces { 
-#       name = "sunrise-app" 
-#     } 
-#   }
-
+    workspaces { 
+      name = "sunrise-app" 
+    }
+  }
 }
+
 # Configure the GCP Providers
 provider "google-beta" {
     project = var.project_id
