@@ -14,7 +14,7 @@ resource "aws_iam_role" "lambda_assume_role" {
 
 # Lambda general policy, allows creating logs, reading secrets, and publishing to SNS
 resource "aws_iam_role_policy" "lambda_general" {
-  role         = aws_iam_role.lambda_assume_role.arn
+  role         = aws_iam_role.lambda_assume_role.name
   policy       = jsonencode({
     Version    = "2012-10-17"
     Statement  = [{

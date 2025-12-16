@@ -12,8 +12,8 @@ terraform {
   cloud {
     organization = "example-org-5e1658" 
 
-    workspaces { 
-      name = "sunrise-app" 
+    workspaces {
+      name = "sunrise-app-gcp"
     }
   }
 }

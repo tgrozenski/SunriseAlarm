@@ -75,7 +75,7 @@ Note: Lambda code will publish success/failure messages to this topic
 ### 3.1 Automatic Key Injection
 - [ ✓ ] Use secrets manager to store GCP service account key
 - [ ✓ ] Reference the key output from GCP module as the secret value (This will be in the lambda code)
-- [ ] Ensure dependency ordering (GCP resources created before AWS secret version)
+- [ ✓ ] Ensure dependency ordering (GCP resources created before AWS secret version)
 
 ### 3.2 Verification
 - [ ] Terraform plan shows correct cross-cloud dependencies

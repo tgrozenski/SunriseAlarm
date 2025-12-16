@@ -1,11 +1,11 @@
-output "secret_manager_arn" {
-  description = "secret manager's arn"
-  value = aws_secretsmanager_secret.firebase_secrets.arn
-}
-
 # Define the secret
 resource "aws_secretsmanager_secret" "lambda_service_key" {
   name = "LAMBDA_SERVICE_KEY"
+}
+
+output "secret_manager_arn" {
+  description = "secret manager's arn"
+  value = aws_secretsmanager_secret.lambda_service_key.arn
 }
 
 # Create primary version of the secret
