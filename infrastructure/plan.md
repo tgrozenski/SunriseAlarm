@@ -78,26 +78,24 @@ Note: Lambda code will publish success/failure messages to this topic
 - [ ✓ ] Ensure dependency ordering (GCP resources created before AWS secret version)
 
 ### 3.2 Verification
-- [ ] Terraform plan shows correct cross-cloud dependencies
-- [ ] Secret contains valid GCP service account JSON
-- [ ] Lambda can retrieve secret at runtime
+- [ ✓ ] Terraform plan shows correct cross-cloud dependencies
+- [ ✓ ] Secret contains valid GCP service account JSON
+- [ ✓ ] Lambda can retrieve secret at runtime
 
 ---
-
-Program flow: EventBridge -> Lambda -> (retrieve secret manager) -> SNS + FCM -> Android app
 
 ## Phase 4: Lambda Function Code
 
 > Not Terraform, but needed to complete the system
 
+- [ ✓ ] Retrieve GCP service account key from Secrets Manager
 ### 4.1 Implementation
-- [ ] Retrieve GCP service account key from Secrets Manager
-- [ ] Exchange service account key for OAuth2 access token
-- [ ] Send FCM message to topic (e.g., )
-- [ ] Publish result to SNS topic (success or failure with details)
+- [ ✓ ] Exchange service account key for OAuth2 access token
+- [ ✓ ] Send FCM message to topic (e.g., )
+- [ ✓ ] Publish result to SNS topic (success or failure with details)
 
 ### 4.2 FCM Message Structure
-- [ ] Define notification payload (title, body, click action)
+- [ ✓ ] Define notification payload (title, body, click action)
 - [ ] Include intent data for your app's alarm reset flow
 - [ ] Test with FCM HTTP v1 API
 
@@ -113,7 +111,6 @@ Program flow: EventBridge -> Lambda -> (retrieve secret manager) -> SNS + FCM ->
 - [ ] Subscribe to FCM topic on app launch ()
 
 ### 5.2 Notification Handling
-- [ ] Implement 
 - [ ] Handle notification tap → open alarm reset flow
 - [ ] Read stored preferences from local storage
 - [ ] Implement one-click recalculation UI
