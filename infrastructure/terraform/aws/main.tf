@@ -5,14 +5,6 @@ terraform {
       version = "~> 6.0"
     }
   }
-  cloud {
-
-    organization = "example-org-5e1658"
-
-    workspaces {
-      name = "sunrise-app-aws"
-    }
-  }
 }
 
 # Remote State, necessary for placing GCP access key in secret manager

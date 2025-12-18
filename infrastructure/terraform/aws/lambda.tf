@@ -36,26 +36,68 @@ resource "aws_iam_role_policy" "lambda_general" {
       "Effect":"Allow",
       "Action":"sns:Publish",
       "Resource":aws_sns_topic.observability.arn
+    },
+    {
+    Effect   = "Allow"
+    Action   = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage"
+    ]
+      Resource = aws_ecr_repository.firebase_caller.arn
+    },
+    {
+      Effect   = "Allow"
+      Action   = "ecr:GetAuthorizationToken"
+      Resource = "*"
     }]
   })
 }
 
-# Package the Lambda function code
-data "archive_file" "lambda_src" {
-  type        = "zip"
-  source_dir  = "src"
-  output_path = "lambda/function.zip"
+# Ensure Lambda is allowed to pull from ECR
+resource "aws_iam_role_policy_attachment" "lambda_ecr" {
+  role       = aws_iam_role.lambda_assume_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Lambda function
-resource "aws_lambda_function" "firebase_caller" {
-  filename         = data.archive_file.lambda_src.output_path
-  function_name    = "firebase_caller"
-  role             = aws_iam_role.lambda_assume_role.arn
-  handler          = "main.handler"
-  source_code_hash = data.archive_file.lambda_src.output_base64sha256
+# ECR Repository to store lambda container image
+resource "aws_ecr_repository" "firebase_caller" {
+  name         = "firebase-caller"
+  force_delete = true
+}
 
-  runtime = "python3.14"
+locals {
+  image_tag = md5(join("", [
+    filemd5("${path.module}/lambda/requirements.txt"),
+    filemd5("${path.module}/lambda/Dockerfile"),
+    filemd5("${path.module}/lambda/src/main.py")
+  ]))
+}
+
+resource "null_resource" "docker_build_push" {
+  triggers = {
+    image_tag = local.image_tag
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+      aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${aws_ecr_repository.firebase_caller.repository_url}
+      docker build -t ${aws_ecr_repository.firebase_caller.repository_url}:${local.image_tag} ${path.module}/lambda
+      docker push ${aws_ecr_repository.firebase_caller.repository_url}:${local.image_tag}
+    EOF
+  }
+
+  depends_on = [aws_ecr_repository.firebase_caller]
+}
+
+resource "aws_lambda_function" "firebase_caller" {
+  function_name = "firebase_caller"
+  role          = aws_iam_role.lambda_assume_role.arn
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.firebase_caller.repository_url}:${local.image_tag}"
+  timeout       = 30
+  memory_size   = 256
+
+  depends_on = [null_resource.docker_build_push]
 }
 
 output "lambda_arn" {

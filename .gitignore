@@ -6,6 +6,10 @@
 *.tfstate.backup
 *.tfvars
 
+# Python - ignore the dependency files
+src/*
+!src/main.py
+
 # Android
 *.iml
 .gradle
