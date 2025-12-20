@@ -45,6 +45,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.font.FontWeight
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity : ComponentActivity() {
     /**
@@ -90,6 +91,18 @@ class MainActivity : ComponentActivity() {
             if (!LocationService().hasLocationPermission())
                 requestLocationPermissions()
             LocationUpdater()
+        }
+        // Request permissions if not granted
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
+        }
+
+        // Subscribe to notif
+        FirebaseMessaging.getInstance().subscribeToTopic("weekly_notif")
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("FCM", "Subscribed to sunrise_alerts")
+                }
         }
     }
 

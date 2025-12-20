@@ -82,7 +82,7 @@ def handler(event, context):
         result = send_fcm_message(
             access_token=access_token,
             project_id=secret["project_id"],
-            topic="your-topic-name",
+            topic="weekly_notif",
             title="Hello",
             body="This is a test notification"
         )

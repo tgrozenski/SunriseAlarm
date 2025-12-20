@@ -25,3 +25,7 @@ src/*
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio
+*.iml
+.idea/

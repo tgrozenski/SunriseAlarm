@@ -1,4 +1,6 @@
 package com.example.sunriseappnew.viewmodel
+import android.app.Application
+import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.util.Log
@@ -7,28 +9,46 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.sunriseappnew.model.LocationService
 import com.example.sunriseappnew.model.LocationService.LocationResultCallback
 import com.example.sunriseappnew.model.SunriseApp
 import com.example.sunriseappnew.model.getCalendarDate
 import com.example.sunriseappnew.model.setAlarm
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.util.Calendar
 
+val Context.dataStore by preferencesDataStore(name = "settings")
 
-/**
- * The only viewModel for app, stores the checkbox and location state & data.
- */
-class SunriseViewModel : ViewModel() {
+class SunriseViewModel(application: Application) : AndroidViewModel(application) {
+    private val context = application.applicationContext
+
 
     /** Mutable private instance of selected days checkbox.*/
     private val _selectedDays = mutableStateListOf<String>()
+
+    /** Load Previous selection */
+    init {
+      viewModelScope.launch {
+          val prefs = context.dataStore.data.first()
+          listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+              .filter { day -> prefs[booleanPreferencesKey(day)] == true }
+              .forEach { day -> _selectedDays.add(day) }
+      }
+    }
+
 
     /** Immutable public instance of selected days checkbox.*/
     val selectedDays: List<String> = _selectedDays
 
     /** Mutable private instance of location. .*/
     private val _location = mutableStateOf<Location?>(null)
+
     /** Immutable public instance of location. .*/
     val location: State<Location?> get() = _location
 
@@ -79,20 +99,31 @@ class SunriseViewModel : ViewModel() {
     /**
      * Toggle day Logic, tries to launch an alarm intent if checked.
      * Updates selectedDays list for UI to observe.
+     * Saves selection to data store
      */
     @RequiresApi(Build.VERSION_CODES.O)
     fun toggleDay(day: String) {
         if (day in selectedDays) {
-            _selectedDays.remove(day)
-        } else {
-            _selectedDays.add(day)
-
-            if (_location.value != null) {
-                val sunrise: Calendar = LocationService.getNextSunrise(_location.value, getCalendarDate(day))
-                // Adjust to offset here
-                sunrise.add(Calendar.MINUTE, timeOffset.value.toInt())
-                setAlarm(SunriseApp.getAppContext(), sunrise, skipUi = true)
+          _selectedDays.remove(day)
+          viewModelScope.launch {
+            context.dataStore.edit { prefs ->
+              prefs[booleanPreferencesKey(day)] = false
             }
+          }
+        } else {
+          _selectedDays.add(day)
+          viewModelScope.launch {
+            context.dataStore.edit { prefs ->
+              prefs[booleanPreferencesKey(day)] = true
+            }
+          }
+
+          if (_location.value != null) {
+              val sunrise: Calendar = LocationService.getNextSunrise(_location.value, getCalendarDate(day))
+              // Adjust to offset here
+              sunrise.add(Calendar.MINUTE, timeOffset.value.toInt())
+              setAlarm(SunriseApp.getAppContext(), sunrise, skipUi = true)
+          }
         }
     }
 }

@@ -106,9 +106,9 @@ Note: Lambda code will publish success/failure messages to this topic
 > Not Terraform, but needed to complete the system
 
 ### 5.1 Firebase Setup
-- [ ] Add  to app (from Terraform output)
-- [ ] Add Firebase Messaging dependency
-- [ ] Subscribe to FCM topic on app launch ()
+- [ ✓ ] Add  to app (from Terraform output)
+- [ ✓ ] Add Firebase Messaging dependency
+- [ ✓ ] Subscribe to FCM topic on app launch ()
 
 ### 5.2 Notification Handling
 - [ ] Handle notification tap → open alarm reset flow
