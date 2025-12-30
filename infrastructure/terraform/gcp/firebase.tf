@@ -27,6 +27,17 @@ output "firebase_android_config" {
 }
 
 # Firebase project ID
-# output "firebase_project_id" {
-#   value = google_firebase_project.firebase.project_id
-# }
+output "firebase_project_id" {
+  value = google_firebase_project.firebase.project_id
+}
+
+# Copies the firebase config to the application level directory
+resource "null_resource" "copy_firebase_config" {
+  depends_on = [data.google_firebase_android_app_config.default]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      terraform output -raw firebase_android_config | base64 -d > "$(git rev-parse --show-toplevel)/app/google-services.json"
+    EOT
+  }
+}

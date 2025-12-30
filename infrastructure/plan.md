@@ -2,124 +2,71 @@
 
 ## Overview
 
-Multi-cloud infrastructure using Terraform to provision a weekly notification system for the SunriseAlarm Android app. AWS handles scheduling and serverless logic, GCP handles Firebase and push notifications.
+We will build a cloud native application. That is, most of the computing and logic will reside in the cloud. The android client app will be more of a simple controller and will recieve events (alarm ringing) from the cloud. Users will have a set and forget experience. We'll use cross-cloud integration to allow us to manage firebase through IaC without being forced to use GCP for the rest of the infrastructure.
 
 ---
 
-## Phase 1: AWS Infrastructure
+## What We'll Need
 
-### 1.1 Project Setup
-- [ ✓ ] Initialize Terraform project structure
-- [ ✓ ] Configure AWS provider
-- [ ✓ ] Set up remote state backend (S3 + DynamoDB for locking, or Terraform Cloud)
-- [ ✓ ] Define input variables (region, environment, naming conventions)
+## IaC
 
-### 1.2 Lambda Function
-- [ ✓ ] Create IAM role for Lambda execution
-- [ ✓ ] Attach policies for CloudWatch Logs, Secrets Manager read access, SNS publish
-- [ ✓ ] Create Lambda function resource (placeholder code initially)
-- [ ] Configure environment variables (GCP project ID, FCM topic name)
-- [ ] Set appropriate timeout and memory allocation
+- Terraform with AWS and GCP providers
 
-### 1.3 EventBridge Scheduler
-- [ ✓ ] Create EventBridge rule with cron expression for Saturday (e.g., )
-- [ ✓ ] Create EventBridge target pointing to Lambda
-- [ ✓ ] Add permissions for EventBridge to invoke Lambda
+- Terraform cloud for remote state
 
-### 1.4 SNS Notifications
-- [ ✓ ] Create SNS topic for job status notifications
-- [ ✓ ] Create SNS subscription (email or SMS to your address)
-- [ ✓ ] Update Lambda IAM role to allow SNS publish
-Note: Lambda code will publish success/failure messages to this topic
+- Terraform CLI and wrapper script to run infrastructure
 
-### 1.5 Secrets Manager
-- [ ✓ ] Create Secrets Manager secret resource (empty placeholder)
-- [ ] This will be populated by GCP service account key in Phase 3
-- [ ] Configure secret rotation policy (optional, for later)
+### In the cloud
 
-### 1.6 Outputs
-- [ ✓ ] Output Lambda ARN
-- [ ✓ ] Output SNS topic ARN
-- [ ✓ ] Output Secrets Manager secret ARN (needed for Phase 3)
+#### AWS
+
+- Secrets Manager stores the service key needed by lambda to access GCP
+
+- Dynamo DB for key value storage
+
+- Lambda containerized config service (use lambda web adapter), stores the user's config (via the client application) in an Dynmamo DB table
+
+- EventBridge schedules the lambda function to run at a specific time
+
+- SNS topic as a central point for failures, all lambda instances have a policy which allows SNS publish
+
+
+- Lambda containerized notification service, is triggered by an eventbride cron job
+  - This triggers the alarm in the android app and recalculates next alarm and reschecules next alarm
 
 ---
 
-## Phase 2: GCP/Firebase Infrastructure
+#### GCP
 
-### 2.1 GCP Setup
-- [ ✓ ] Configure Google provider and Google Beta provider
-- [ ✓ ] Enable required APIs (Firebase, Cloud Resource Manager, IAM)
-- [ ✓ ] Create or reference existing GCP project
+- Manages our Firebase config
 
-### 2.2 Firebase Project
-- [ ✓ ] Enable Firebase on GCP project ( resource)
-- [ ✓ ] Create Firebase Android app ( resource)
-- [ ✓ ] Use your app's package name: 
-- [ ] Extract for your Android project (Coming back to this)
+- Need the capability to send a Data message
 
-### 2.3 Service Account for FCM Access
-- [ ✓ ] Create dedicated service account for Lambda to use
-- [ ✓ ] Assign  or minimal FCM permissions
-- [ ✓ ] Generate service account key ( resource)
+- A service account for lambda to use
 
-### 2.4 Outputs
-- [ ✓ ] Output Firebase project ID
-- [ ✓ ] Output service account email
-- [ ✓ ] Output service account key (sensitive, for Phase 3)
-- [ ✓ ] Automate copying of google-services.json into application directory
+### New Services to build
+- 
 
----
+- Lambda config service, stores the user's config (via the client application) in an dynamoDB table (go)
 
-## Phase 3: Cross-Cloud Integration
+- Lambda containerized notification service, triggered by an eventbridge cron job (go)
 
-### 3.1 Automatic Key Injection
-- [ ✓ ] Use secrets manager to store GCP service account key
-- [ ✓ ] Reference the key output from GCP module as the secret value (This will be in the lambda code)
-- [ ✓ ] Ensure dependency ordering (GCP resources created before AWS secret version)
+- Use docker compose to test these services
 
-### 3.2 Verification
-- [ ✓ ] Terraform plan shows correct cross-cloud dependencies
-- [ ✓ ] Secret contains valid GCP service account JSON
-- [ ✓ ] Lambda can retrieve secret at runtime
+- Rehaul the android app, will be very simple UI wise probably just a few kotlin files
 
----
+- Onboarding flow:
 
-## Phase 4: Lambda Function Code
+> First app launch
+    ↓
+Generate UUID (or hash device identifiers)
+    ↓
+Store locally (SharedPreferences / DataStore)
+    ↓
+Send to backend as device_id
+    ↓
+All future requests include this device_id
 
-> Not Terraform, but needed to complete the system
+> Need to handle tokens rotating with firebase
 
-- [ ✓ ] Retrieve GCP service account key from Secrets Manager
-### 4.1 Implementation
-- [ ✓ ] Exchange service account key for OAuth2 access token
-- [ ✓ ] Send FCM message to topic (e.g., )
-- [ ✓ ] Publish result to SNS topic (success or failure with details)
-
-### 4.2 FCM Message Structure
-- [ ✓ ] Define notification payload (title, body, click action)
-- [ ] Include intent data for your app's alarm reset flow
-- [ ] Test with FCM HTTP v1 API
-
----
-
-## Phase 5: Android App Integration
-
-> Not Terraform, but needed to complete the system
-
-### 5.1 Firebase Setup
-- [ ✓ ] Add  to app (from Terraform output)
-- [ ✓ ] Add Firebase Messaging dependency
-- [ ✓ ] Subscribe to FCM topic on app launch ()
-
-### 5.2 Notification Handling
-- [ ] Handle notification tap → open alarm reset flow
-- [ ] Read stored preferences from local storage
-- [ ] Implement one-click recalculation UI
-
----
-
-## Notes
-
-- The clever part: GCP service account key flows automatically into AWS Secrets Manager through Terraform's dependency graph. One  provisions both clouds and wires them together.
-- FCM topic messaging means no database needed—users self-subscribe from the app.
-- SNS gives you visibility into whether the job runs; you can extend this later to include Firebase delivery receipts if needed.
-- Consider adding a  vs  workspace or variable for testing.
+> IMPORTANT: We use a FCM data message to wake the app, then locally create a notification with setFullScreenIntent() to trigger the alarm activity. This should make the alarm trigger more reliably accross different OEMs and in different power modes.
