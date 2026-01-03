@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Binaries
+config-service
+*.exe
+*.out
+
+# Test and coverage
+coverage.txt
+*.test
+*.prof
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

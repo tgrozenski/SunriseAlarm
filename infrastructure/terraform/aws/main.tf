@@ -21,5 +21,5 @@ data "terraform_remote_state" "gcp" {
 
 # Configure the AWS Provider
 provider "aws" {
-  region     = "us-west-1"
+  region = var.aws_region
 }
