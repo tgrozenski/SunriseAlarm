@@ -43,10 +43,6 @@ resource "aws_lambda_function" "config_service" {
   timeout       = 30
   memory_size   = 256
 
-  layers = [
-    "arn:aws:lambda:${var.aws_region}:753240598075:layer:LambdaAdapterLayerX86:20"
-  ]
-
   environment {
     variables = {
       PORT    = "8080"
@@ -54,4 +50,31 @@ resource "aws_lambda_function" "config_service" {
   }
 
   depends_on = [null_resource.docker_build_push_config_service]
+}
+
+# Output a service URL
+resource "aws_lambda_function_url" "config_service" {
+  function_name      = aws_lambda_function.config_service.function_name
+  authorization_type = "NONE"
+}
+
+# Allow public access to the function
+resource "aws_lambda_permission" "function_url_public_access" {
+  statement_id           = "FunctionURLAllowPublicAccess2"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.config_service.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+# Allow public invoking to the function
+resource "aws_lambda_permission" "function_url_invoke_access" {
+  statement_id  = "FunctionURLInvokeAllowPublicAccess"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.config_service.function_name
+  principal     = "*"
+}
+
+output "config_service_url" {
+  value = aws_lambda_function_url.config_service.function_url
 }

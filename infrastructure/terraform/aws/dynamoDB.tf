@@ -4,7 +4,7 @@ resource "aws_dynamodb_table" "user_configs" {
   hash_key       = "deviceId"
 
   attribute {
-    name = "GameTitle"
+    name = "deviceId"
     type = "S"
   }
 }

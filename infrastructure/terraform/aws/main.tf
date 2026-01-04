@@ -8,16 +8,16 @@ terraform {
 }
 
 # Remote State, necessary for placing GCP access key in secret manager
-data "terraform_remote_state" "gcp" {
-  backend = "remote"
-
-  config = {
-    organization = "example-org-5e1658"
-    workspaces = {
-      name = "sunrise-app-gcp"
-    }
-  }
-}
+#data "terraform_remote_state" "gcp" {
+#  backend = "remote"
+#
+#  config = {
+#    organization = "example-org-5e1658"
+#    workspaces = {
+#      name = "sunrise-app-gcp"
+#    }
+#  }
+#}
 
 # Configure the AWS Provider
 provider "aws" {
