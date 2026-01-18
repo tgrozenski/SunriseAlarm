@@ -3,7 +3,7 @@ resource "aws_iam_role" "lambda_assume_role" {
   name = "config_service"
 
   assume_role_policy = jsonencode({
-    Version     = "2012-10-17"
+  Version       = "2012-10-17"
     Statement   = [{
       Effect    = "Allow"
       Principal = { Service = "lambda.amazonaws.com" }
@@ -14,17 +14,26 @@ resource "aws_iam_role" "lambda_assume_role" {
 
 # Permissions for lambda to access dynamoDB
 resource "aws_iam_role_policy" "config_service" {
-  role         = aws_iam_role.lambda_assume_role.name
-  policy       = jsonencode({
-    Version    = "2012-10-17"
-    Statement  = [
+  role = aws_iam_role.lambda_assume_role.name
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
         Effect = "Allow"
         Action = [
           "dynamodb:GetItem",
-          "dynamodb:PutItem"
+          "dynamodb:PutItem",
+          "dynamodb:Query"
         ]
-        Resource = aws_dynamodb_table.user_configs.arn
+        Resource = [
+          aws_dynamodb_table.user_configs.arn,
+          "${aws_dynamodb_table.user_configs.arn}/index/AlarmTimeIndex"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = "secretsmanager:GetSecretValue"
+        Resource = aws_secretsmanager_secret.lambda_service_key.arn
       }
     ]
   })
@@ -45,7 +54,7 @@ resource "aws_lambda_function" "config_service" {
 
   environment {
     variables = {
-      PORT    = "8080"
+      PORT = "8080"
     }
   }
 

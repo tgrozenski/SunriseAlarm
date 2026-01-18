@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"myproject/internal/dynamodb"
 	"myproject/internal/models"
+	"myproject/internal/notification"
+	"myproject/internal/sunrise"
 	"myproject/internal/validation"
 )
 
@@ -16,6 +20,69 @@ type ConfigHandler struct {
 
 func NewConfigHandler(store dynamodb.ConfigStore) *ConfigHandler {
 	return &ConfigHandler{store: store}
+}
+
+type AlarmHandler struct {
+	store         dynamodb.ConfigStore
+	notifier      notification.Notifier
+	secretManager notification.SecretManager
+}
+
+func NewAlarmHandler(store dynamodb.ConfigStore, notifier notification.Notifier, secretManager notification.SecretManager) *AlarmHandler {
+	return &AlarmHandler{store: store, notifier: notifier, secretManager: secretManager}
+}
+
+func (h *AlarmHandler) CheckAlarm(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	now := time.Now().UTC()
+	dateBucket := now.Format("2006-01-02")
+	startTime := now.Add(-1 * time.Minute).Format(time.RFC3339)
+	endTime := now.Add(1 * time.Minute).Format(time.RFC3339)
+
+	configs, err := h.store.QueryByAlarmTime(ctx, dateBucket, startTime, endTime)
+	if err != nil {
+		writeError(w, "failed to query alarms", http.StatusInternalServerError)
+		return
+	}
+
+	if len(configs) == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]int{"fired": 0})
+		return
+	}
+
+	var notifier notification.Notifier
+	if h.notifier != nil {
+		notifier = h.notifier
+	} else {
+		secret, err := h.secretManager.GetSecret(ctx, "LAMBDA_SERVICE_KEY")
+		if err != nil {
+			writeError(w, "failed to retrieve service key", http.StatusInternalServerError)
+			return
+		}
+		notifier = notification.NewFCMNotifier(secret)
+	}
+	fired := 0
+	for _, config := range configs {
+		if err := notifier.SendNotification(ctx, config.FCMToken, config.DeviceID); err != nil {
+			// Notification failed, but we still need to reschedule the alarm
+			// Log error but continue to reschedule
+			log.Printf("failed to send notification for device %s: %v", config.DeviceID, err)
+		} else {
+			fired++
+		}
+		// Always reschedule after attempting notification
+		config.NextAlarmTime, config.AlarmDateBucket = sunrise.ComputeAlarmFields(&config)
+		if err := h.store.PutConfig(ctx, &config); err != nil {
+			log.Printf("failed to update config for device %s: %v", config.DeviceID, err)
+			continue
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]int{"fired": fired})
 }
 
 func (h *ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +120,28 @@ func (h *ConfigHandler) PutConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Handle manual override for testing
+	if !config.Enabled {
+		config.NextAlarmTime = ""
+		config.AlarmDateBucket = "DISABLED"
+	} else if config.NextAlarmTime != "" {
+		// Use provided nextAlarmTime (manual override for testing)
+		// If alarmDateBucket not provided, derive from nextAlarmTime
+		if config.AlarmDateBucket == "" {
+			if t, err := time.Parse(time.RFC3339, config.NextAlarmTime); err == nil {
+				config.AlarmDateBucket = t.UTC().Format("2006-01-02")
+			} else {
+				// If parsing fails, fall back to sunrise calculation
+				config.NextAlarmTime, config.AlarmDateBucket = sunrise.ComputeAlarmFields(&config)
+			}
+		}
+	} else {
+		// Calculate from sunrise
+		config.NextAlarmTime, config.AlarmDateBucket = sunrise.ComputeAlarmFields(&config)
+	}
+
 	if err := h.store.PutConfig(r.Context(), &config); err != nil {
+		log.Printf("failed to save config: %v", err)
 		writeError(w, "failed to save config", http.StatusInternalServerError)
 		return
 	}

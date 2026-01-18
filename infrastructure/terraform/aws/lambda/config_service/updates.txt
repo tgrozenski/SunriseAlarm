@@ -1,0 +1,95 @@
+diff --git a/infrastructure/terraform/aws/lambda/config_service/SPEC.md b/infrastructure/terraform/aws/lambda/config_service/SPEC.md
+index 9c18822..ff15d9a 100644
+--- a/infrastructure/terraform/aws/lambda/config_service/SPEC.md
++++ b/infrastructure/terraform/aws/lambda/config_service/SPEC.md
+@@ -17,6 +17,9 @@ Item:
+     "fcmToken": "dKj8X9nR3qP5vL2m:APA91b...",
+     "day_preferences": [false, false, false, true, true, true, true],
+     "time_zone": "America/Los_Angeles",
++    "offset" : 30,
++    "nextAlarmTime": "2026-01-15T14:32:00Z",
++    "alarmDateBucket": "2026-01-15",
+     "enabled": true
+ }
+ ```
+@@ -33,6 +36,14 @@ Ensure the following for the config service:
+ 
+ - An Upsert config endpoint, receives an HTTP POST request with a JSON body to update a current config or create a new one
+   - Returns 200 with no response to indicate success (the frontend should already have the user's choice)
++  - Calculates nextAlarmTime and alarmDateBucket based on lat/long/timezone/offset/day_preferences (use CalculateSunrise func)
++  - Stores complete config including computed fields
++
++  - Upsert Special Case:
++    - When enabled = false:
++      - Set alarmDateBucket to "DISABLED"
++      - Set nextAlarmTime to empty string
++      - This ensures disabled alarms are excluded from GSI queries
+ 
+ - A validate config funciton, responsible for:
+ 
+@@ -42,6 +53,7 @@ Ensure the following for the config service:
+   - Day preferences is a list of exactly 7 booleans
+   - Time zone is a valid IANA time zone
+   - Enabled is a boolean
++  - Offset is an integer between -30 and 30
+ 
+ - Validation errors return 400 with body: {"error": "description of what failed"}
+ 
+@@ -51,3 +63,57 @@ Ensure the following for the config service:
+   - We will test:
+     - All endpoints while with mock dynamoDB (UNIT)
+     - All helper funcitons (UNIT)
++
++### Notification Service
++
++Additionally, we'll need a notification service. In order to keep overhead low we'll include this as part of the same web server to reduce code duplication.
++
++This service is responsible triggering alarms set off by eventbridge crons, it will then be responsible for checking the config to determine the next time to reschedule itself. To activate alarms we'll use polling. An eventbridge cron will poll a check alarm endpoint to check if any alarms need to go off that minute. This endpoint handles sending the data notification which triggers the alarm activity in the mobile client app.
++
++> KISS - Micheal Scott
++
++We will primarily need this new endpoint:
++
++GET check_alarm -> response 200 {"fired": n}
++  - Queries AlarmTimeIndex GSI where:
++    - alarmDateBucket = today's date (UTC, format "2006-01-02")
++    - nextAlarmTime BETWEEN (now - 1 minute) AND (now + 1 minute)
++  - If > 0 alarms are found:
++    - Reach into secret manager to get a service key named `LAMBDA_SERVICE_KEY`
++    ```terraform
++    resource "aws_secretsmanager_secret" "lambda_service_key" {
++      name = "LAMBDA_SERVICE_KEY"
++    }
++      ```
++    - For each alarm:
++      - Use that service key to send a DATA notification through FCM to the mobile client app
++        - Try with exponential backoff
++        - FCM payload is a JSON object
++        ```json
++        {
++          "message": {
++            "token": "user's_fcm_token",
++            "data": {
++              "type": "SUNRISE_ALARM",
++              "deviceId": "abc-123"
++            },
++            "android": {
++              "priority": "high"
++            }
++          }
++        }
++        ```
++      - Recalculate the the next alarm time and store it in the config
++
++### Additional Functions
++
++- We will need a calculate sunrise funtion that takes the lat/long and time zone and returns the next sunrise time.
++
++  ```go
++  func CalculateSunrise(config UserConfig) time.Time {
++    // TODO: implement
++  }
++```
++```
++
++- I want to see unit tests for this function for various sunrises in the continental US. You can leave the actual sunrise times with a placeholder, I'll source the actual data myself.

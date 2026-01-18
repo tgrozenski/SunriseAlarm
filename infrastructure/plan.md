@@ -6,6 +6,11 @@ We will build a cloud native application. That is, most of the computing and log
 
 ---
 
+
+TODO: 
+
+- Write the spec for the notification service
+
 ## What We'll Need
 
 ## IaC
@@ -30,9 +35,26 @@ We will build a cloud native application. That is, most of the computing and log
 
 - SNS topic as a central point for failures, all lambda instances have a policy which allows SNS publish
 
-
 - Lambda containerized notification service, is triggered by an eventbride cron job
   - This triggers the alarm in the android app and recalculates next alarm and reschecules next alarm
+
+According to timeanddate.com
+
+summer-solstice-2026 -> June 20 or 21
+easternmost point in continental US -> West Quoddy Head, Maine, USA
+according to [timeanddate.com](https://www.timeanddate.com/sun/@4982705?month=6&year=2026) we have that sunrise will be 4:41 local time
+
+Westernmost point in the continental US is -> Cape Alava Washington, 8:06 on the 21 and 22
+[timeanddate.com](https://www.timeanddate.com/sun/@11822487?month=12&year=2026)
+
+Thus UTC time is 8:41 UTC, latest is 16:06 UTC
+
+```terraform
+resource "aws_cloudwatch_event_rule" "sunrise_poll" {
+  name                = "sunrise-poll"
+  schedule_expression = "cron(0/1 8-16 * * ? *)"  # 08:00 - 16:00 UTC
+}
+```
 
 ---
 

@@ -8,7 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	awsdynamodb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	awssecretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	internaldynamodb "myproject/internal/dynamodb"
+	"myproject/internal/notification"
 	"myproject/internal/server"
 )
 
@@ -23,7 +25,10 @@ func main() {
 	ddbClient := awsdynamodb.NewFromConfig(awsCfg)
 	store := internaldynamodb.NewDynamoDBStore(ddbClient)
 
-	handler := server.NewServer(store)
+	secretsClient := awssecretsmanager.NewFromConfig(awsCfg)
+	secretManager := notification.NewAWSSecretManager(secretsClient)
+
+	handler := server.NewServer(store, secretManager)
 
 	port := os.Getenv("PORT")
 	if port == "" {

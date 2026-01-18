@@ -6,14 +6,17 @@ import (
 	"github.com/gorilla/mux"
 	"myproject/internal/dynamodb"
 	"myproject/internal/handlers"
+	"myproject/internal/notification"
 )
 
-func NewServer(store dynamodb.ConfigStore) http.Handler {
+func NewServer(store dynamodb.ConfigStore, secretManager notification.SecretManager) http.Handler {
 	router := mux.NewRouter()
-	handler := handlers.NewConfigHandler(store)
+	configHandler := handlers.NewConfigHandler(store)
+	alarmHandler := handlers.NewAlarmHandler(store, nil, secretManager)
 
-	router.HandleFunc("/config/{deviceId}", handler.GetConfig).Methods("GET")
-	router.HandleFunc("/config", handler.PutConfig).Methods("POST")
+	router.HandleFunc("/config/{deviceId}", configHandler.GetConfig).Methods("GET")
+	router.HandleFunc("/config", configHandler.PutConfig).Methods("POST")
+	router.HandleFunc("/check_alarm", alarmHandler.CheckAlarm).Methods("GET")
 	router.HandleFunc("/health", healthCheck).Methods("GET")
 
 	return router
