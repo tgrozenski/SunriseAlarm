@@ -11,7 +11,6 @@ output "secret_manager_arn" {
 # Create primary version of the secret
 resource "aws_secretsmanager_secret_version" "v1" {
   secret_id     = aws_secretsmanager_secret.lambda_service_key.id
-  secret_string = "replace-with-actual-fcm-api-key"
-  # This may cause an issue if gcp hasn't been applied yet
-  # secret_string = base64decode(data.terraform_remote_state.gcp.outputs.service_account_key)
+  # This will cause an issue if gcp hasn't been applied yet
+  secret_string = base64decode(data.terraform_remote_state.gcp.outputs.service_account_key)
 }

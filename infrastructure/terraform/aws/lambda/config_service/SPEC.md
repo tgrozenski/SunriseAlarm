@@ -126,7 +126,6 @@ GET check_alarm -> response 200 {"fired": n}
 
   ```go
   func CalculateSunrise(config UserConfig) time.Time {
-    // TODO: implement
   }
 ```
 ```
@@ -143,10 +142,12 @@ For integration testing, the service supports manual override of `nextAlarmTime`
 - **Test Framework**: Integration tests should be written as a proper test framework with:
   - Assertion functions (status codes, JSON field validation)
   - Pass/fail tracking and reporting
-  - Test data cleanup using `aws dynamodb delete-item`
+  - Test data cleanup using `aws dynamodb delete-item` or boto3 client
 
 Example test scenario using manual overrides:
 1. Create config with specific `nextAlarmTime` set to current time ±1 minute
 2. Call `/check_alarm` endpoint
 3. Verify alarm is detected (`fired: 1` expected, but FCM fails so `fired: 0` in practice)
 4. Clean up test data with AWS CLI
+
+We will need comprehensive integration tests written in Python to test the endpoints.

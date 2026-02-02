@@ -42,6 +42,20 @@ func ValidateUserConfig(config *models.UserConfig) error {
 		return errors.New("day_preferences must have exactly 7 values")
 	}
 
+	// When enabled=true, at least one day must be enabled
+	if config.Enabled {
+		hasEnabledDay := false
+		for _, enabled := range config.DayPreferences {
+			if enabled {
+				hasEnabledDay = true
+				break
+			}
+		}
+		if !hasEnabledDay {
+			return errors.New("at least one day must be enabled when enabled=true")
+		}
+	}
+
 	if config.TimeZone == "" {
 		return errors.New("time_zone is required")
 	}
@@ -51,6 +65,17 @@ func ValidateUserConfig(config *models.UserConfig) error {
 
 	if config.Offset < -30 || config.Offset > 30 {
 		return errors.New("offset must be between -30 and 30")
+	}
+
+	// Manual override validation: both fields must be provided together or neither
+	hasNextAlarmTime := config.NextAlarmTime != ""
+	hasAlarmDateBucket := config.AlarmDateBucket != ""
+	if hasNextAlarmTime != hasAlarmDateBucket {
+		return errors.New("nextAlarmTime and alarmDateBucket must be provided together or neither")
+	}
+	// If provided, ensure they're not used when disabled
+	if hasNextAlarmTime && !config.Enabled {
+		return errors.New("nextAlarmTime and alarmDateBucket cannot be provided when enabled=false")
 	}
 
 	// Validate NextAlarmTime format if provided

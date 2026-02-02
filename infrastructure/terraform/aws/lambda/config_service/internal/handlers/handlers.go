@@ -73,7 +73,13 @@ func (h *AlarmHandler) CheckAlarm(w http.ResponseWriter, r *http.Request) {
 			fired++
 		}
 		// Always reschedule after attempting notification
-		config.NextAlarmTime, config.AlarmDateBucket = sunrise.ComputeAlarmFields(&config)
+		nextAlarmTime, alarmDateBucket, err := sunrise.ComputeAlarmFields(&config)
+		if err != nil {
+			log.Printf("failed to compute alarm fields for device %s: %v", config.DeviceID, err)
+			continue
+		}
+		config.NextAlarmTime = nextAlarmTime
+		config.AlarmDateBucket = alarmDateBucket
 		if err := h.store.PutConfig(ctx, &config); err != nil {
 			log.Printf("failed to update config for device %s: %v", config.DeviceID, err)
 			continue
@@ -120,26 +126,23 @@ func (h *ConfigHandler) PutConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Handle manual override for testing
+	// Handle manual override
 	if !config.Enabled {
 		config.NextAlarmTime = ""
 		config.AlarmDateBucket = "DISABLED"
-	} else if config.NextAlarmTime != "" {
-		// Use provided nextAlarmTime (manual override for testing)
-		// If alarmDateBucket not provided, derive from nextAlarmTime
-		if config.AlarmDateBucket == "" {
-			if t, err := time.Parse(time.RFC3339, config.NextAlarmTime); err == nil {
-				config.AlarmDateBucket = t.UTC().Format("2006-01-02")
-			} else {
-				// If parsing fails, fall back to sunrise calculation
-				config.NextAlarmTime, config.AlarmDateBucket = sunrise.ComputeAlarmFields(&config)
-			}
+	} else if config.NextAlarmTime == "" {
+		// Calculate from sunrise (no manual override provided)
+		nextAlarmTime, alarmDateBucket, err := sunrise.ComputeAlarmFields(&config)
+		if err != nil {
+			log.Printf("failed to compute alarm fields: %v", err)
+			writeError(w, "failed to compute next alarm time", http.StatusInternalServerError)
+			return
 		}
-	} else {
-		// Calculate from sunrise
-		config.NextAlarmTime, config.AlarmDateBucket = sunrise.ComputeAlarmFields(&config)
+		config.NextAlarmTime = nextAlarmTime
+		config.AlarmDateBucket = alarmDateBucket
 	}
 
+	// If NextAlarmTime was already set, keep it as-is (manual override for testing)
 	if err := h.store.PutConfig(r.Context(), &config); err != nil {
 		log.Printf("failed to save config: %v", err)
 		writeError(w, "failed to save config", http.StatusInternalServerError)

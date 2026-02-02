@@ -27,15 +27,8 @@ import time
 # Third-party imports
 import pytest
 import requests
-
-# Try to import boto3 for cleanup, but make it optional
-try:
-    import boto3
-    from botocore.exceptions import ClientError
-
-    BOTO3_AVAILABLE = True
-except ImportError:
-    BOTO3_AVAILABLE = False
+import boto3
+from botocore.exceptions import ClientError
 
 # ==========================================
 # Configuration
@@ -75,21 +68,13 @@ class TestContext:
         print(f"Cleaning up {len(self.devices_to_cleanup)} test devices...")
 
         # Try boto3 first
-        if BOTO3_AVAILABLE:
-            self._cleanup_with_boto3()
-        else:
-            # Fall back to AWS CLI
-            self._cleanup_with_cli()
+        self._cleanup_with_boto3()
 
         self.devices_to_cleanup.clear()
-        print("Cleanup complete")
+        print("Cleanup complete, Couldn't clean up objects")
 
     def _cleanup_with_boto3(self) -> None:
         """Clean up using boto3."""
-        if not BOTO3_AVAILABLE:
-            self._cleanup_with_cli()
-            return
-
         try:
             dynamodb = boto3.client("dynamodb", region_name=AWS_REGION)
             for device_id in self.devices_to_cleanup:
@@ -101,33 +86,7 @@ class TestContext:
                     print(f"Warning: Failed to delete device {device_id}: {e}")
         except Exception as e:
             print(f"Warning: boto3 cleanup failed: {e}")
-            # Fall back to CLI
-            self._cleanup_with_cli()
 
-    def _cleanup_with_cli(self) -> None:
-        """Clean up using AWS CLI."""
-        for device_id in self.devices_to_cleanup:
-            try:
-                subprocess.run(
-                    [
-                        "aws",
-                        "dynamodb",
-                        "delete-item",
-                        "--table-name",
-                        DYNAMODB_TABLE,
-                        "--region",
-                        AWS_REGION,
-                        "--key",
-                        json.dumps({"deviceId": {"S": device_id}}),
-                        "--output",
-                        "json",
-                    ],
-                    capture_output=True,
-                    timeout=10,
-                    check=False,
-                )
-            except (subprocess.SubprocessError, FileNotFoundError):
-                pass  # AWS CLI not available or command failed
 
 
 # ==========================================
@@ -667,7 +626,6 @@ class TestCheckAlarm:
         """Test basic check_alarm endpoint."""
         response = make_request("GET", "check_alarm", context=test_context)
 
-        # Note: This may return 404 if endpoint not deployed
         # Original test expects 200, keeping that expectation
         assert_status(response, 200, test_context)
         assert_json_contains(response, "fired", test_context)
@@ -733,9 +691,6 @@ class TestCheckAlarm:
 # ==========================================
 
 if __name__ == "__main__":
-    # Check prerequisites (imports will fail here if missing)
-    if not BOTO3_AVAILABLE:
-        print("WARNING: 'boto3' not available. AWS cleanup will use CLI or be skipped.")
 
     # Run pytest programmatically
     print(f"Running integration tests against: {BASE_URL}")

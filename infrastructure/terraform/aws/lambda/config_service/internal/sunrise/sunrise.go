@@ -1,39 +1,47 @@
 package sunrise
 
 import (
+	"errors"
 	"time"
 
 	"github.com/nathan-osman/go-sunrise"
 	"myproject/internal/models"
 )
 
-func ComputeAlarmFields(config *models.UserConfig) (nextAlarmTime, alarmDateBucket string) {
+func ComputeAlarmFields(config *models.UserConfig) (nextAlarmTime, alarmDateBucket string, err error) {
 	if !config.Enabled {
-		return "", "DISABLED"
+		return "", "DISABLED", nil
 	}
 
-	alarmTime := CalculateNextSunrise(config)
+	alarmTime, err := CalculateNextSunrise(config)
+	if err != nil {
+		return "", "", err
+	}
 	nextAlarmTime = alarmTime.UTC().Format(time.RFC3339)
 	alarmDateBucket = alarmTime.UTC().Format("2006-01-02")
-	return
+	return nextAlarmTime, alarmDateBucket, nil
 }
 
-func CalculateNextSunrise(config *models.UserConfig) time.Time {
+func CalculateNextSunrise(config *models.UserConfig) (time.Time, error) {
+	return calculateNextSunriseAtTime(config, time.Now().UTC())
+}
+
+func calculateNextSunriseAtTime(config *models.UserConfig, nowUTC time.Time) (time.Time, error) {
 	loc, err := time.LoadLocation(config.TimeZone)
 	if err != nil {
 		loc = time.UTC
 	}
 
-	now := time.Now().In(loc)
+	now := nowUTC.In(loc)
 
-	// Start searching from today
-	for dayOffset := 0; dayOffset < 365; dayOffset++ {
+	// Start searching from today up to next week (8 days total)
+	for dayOffset := 0; dayOffset <= 7; dayOffset++ {
 		date := now.AddDate(0, 0, dayOffset)
 		weekday := int(date.Weekday())
 
 		// Sunday = 0, Monday = 1, ..., Saturday = 6
 		// day_preferences[0] is Sunday, [1] Monday, etc.
-		if dayOffset < len(config.DayPreferences) && !config.DayPreferences[weekday] {
+		if !config.DayPreferences[weekday] {
 			continue
 		}
 
@@ -52,13 +60,13 @@ func CalculateNextSunrise(config *models.UserConfig) time.Time {
 		alarmTime := sunriseUTC.Add(time.Duration(config.Offset) * time.Minute)
 
 		// If the alarm time is in the past relative to now (UTC), continue to next day
-		if alarmTime.Before(time.Now().UTC()) {
+		if alarmTime.Before(nowUTC) {
 			continue
 		}
 
-		return alarmTime
+		return alarmTime, nil
 	}
 
-	// Fallback: return a far future date (should not happen with day preferences)
-	return time.Now().UTC().AddDate(1, 0, 0)
+	// Should not reach here with proper validation (at least one day enabled)
+	return time.Time{}, errors.New("no enabled day found within next week")
 }

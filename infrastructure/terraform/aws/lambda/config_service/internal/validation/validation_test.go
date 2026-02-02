@@ -221,6 +221,68 @@ func TestValidateUserConfig(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "enabled true but no days enabled",
+			config: models.UserConfig{
+				DeviceID:       "550e8400-e29b-41d4-a716-446655440000",
+				Lat:            34.0522,
+				Long:           -118.2437,
+				FCMToken:       "token",
+				DayPreferences: []bool{false, false, false, false, false, false, false},
+				TimeZone:       "America/Los_Angeles",
+				Offset:         0,
+				Enabled:        true,
+			},
+			wantErr: true,
+		},
+		{
+			name: "manual override: only nextAlarmTime provided",
+			config: models.UserConfig{
+				DeviceID:       "550e8400-e29b-41d4-a716-446655440000",
+				Lat:            34.0522,
+				Long:           -118.2437,
+				FCMToken:       "token",
+				DayPreferences: []bool{false, false, false, true, true, true, true},
+				TimeZone:       "America/Los_Angeles",
+				Offset:         0,
+				Enabled:        true,
+				NextAlarmTime:  "2026-01-15T14:32:00Z",
+				// alarmDateBucket omitted
+			},
+			wantErr: true,
+		},
+		{
+			name: "manual override: only alarmDateBucket provided",
+			config: models.UserConfig{
+				DeviceID:       "550e8400-e29b-41d4-a716-446655440000",
+				Lat:            34.0522,
+				Long:           -118.2437,
+				FCMToken:       "token",
+				DayPreferences: []bool{false, false, false, true, true, true, true},
+				TimeZone:       "America/Los_Angeles",
+				Offset:         0,
+				Enabled:        true,
+				// nextAlarmTime omitted
+				AlarmDateBucket: "2026-01-15",
+			},
+			wantErr: true,
+		},
+		{
+			name: "manual override fields provided when disabled",
+			config: models.UserConfig{
+				DeviceID:        "550e8400-e29b-41d4-a716-446655440000",
+				Lat:             34.0522,
+				Long:            -118.2437,
+				FCMToken:        "token",
+				DayPreferences:  []bool{false, false, false, true, true, true, true},
+				TimeZone:        "America/Los_Angeles",
+				Offset:          0,
+				Enabled:         false,
+				NextAlarmTime:   "2026-01-15T14:32:00Z",
+				AlarmDateBucket: "2026-01-15",
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
