@@ -4,6 +4,8 @@ resource "aws_cloudwatch_event_rule" "check_alarm_cron" {
   description         = "Triggers every minute to poll the check_alarm endpoint"
   schedule_expression = "cron(* 8-16 * * ? *)"
   state               = "DISABLED"  # Use "ENABLED" for prod
+  # schedule_expression = "rate(1 minute)"
+  # state = "ENABLED"
 }
 
 resource "aws_cloudwatch_event_target" "check_alarm_target" {

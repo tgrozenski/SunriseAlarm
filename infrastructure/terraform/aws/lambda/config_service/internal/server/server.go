@@ -16,7 +16,7 @@ func NewServer(store dynamodb.ConfigStore, secretManager notification.SecretMana
 
 	router.HandleFunc("/config/{deviceId}", configHandler.GetConfig).Methods("GET")
 	router.HandleFunc("/config", configHandler.PutConfig).Methods("POST")
-	router.HandleFunc("/check_alarm", alarmHandler.CheckAlarm).Methods("GET")
+	router.HandleFunc("/check_alarm", alarmHandler.CheckAlarm).Methods("GET", "POST")
 	router.HandleFunc("/health", healthCheck).Methods("GET")
 
 	return router

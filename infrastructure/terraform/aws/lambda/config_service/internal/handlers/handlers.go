@@ -39,6 +39,8 @@ func (h *AlarmHandler) CheckAlarm(w http.ResponseWriter, r *http.Request) {
 	startTime := now.Add(-1 * time.Minute).Format(time.RFC3339)
 	endTime := now.Add(1 * time.Minute).Format(time.RFC3339)
 
+	log.Printf("LOG: Check Alarm Endpoint has been reached\n")
+
 	configs, err := h.store.QueryByAlarmTime(ctx, dateBucket, startTime, endTime)
 	if err != nil {
 		writeError(w, "failed to query alarms", http.StatusInternalServerError)
@@ -153,6 +155,7 @@ func (h *ConfigHandler) PutConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func writeError(w http.ResponseWriter, message string, status int) {
+	log.Printf("ERROR [%d]: %s", status, message)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})

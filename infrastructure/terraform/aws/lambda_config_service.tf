@@ -12,7 +12,7 @@ resource "aws_iam_role" "lambda_assume_role" {
   })
 }
 
-# Permissions for lambda to access dynamoDB
+# Permissions for lambda to access dynamoDB, and create CloudWatch logs
 resource "aws_iam_role_policy" "config_service" {
   role = aws_iam_role.lambda_assume_role.name
   policy = jsonencode({
@@ -39,6 +39,7 @@ resource "aws_iam_role_policy" "config_service" {
   })
 }
 
+# Needed to push to ECR and put cloudwatch logs
 resource "aws_iam_role_policy_attachment" "lambda_ecr" {
   role       = aws_iam_role.lambda_assume_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
@@ -55,13 +56,15 @@ resource "aws_lambda_function" "config_service" {
   environment {
     variables = {
       PORT = "8080"
+      AWS_LWA_PASS_THROUGH_PATH = "/check_alarm" # Pass eventbridge traffic to this endpoint
+      AWS_LWA_READINESS_CHECK_PATH = "/health"
     }
   }
 
   depends_on = [null_resource.docker_build_push_config_service]
 }
 
-# Output a service URL
+# service URL
 resource "aws_lambda_function_url" "config_service" {
   function_name      = aws_lambda_function.config_service.function_name
   authorization_type = "NONE"
